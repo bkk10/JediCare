@@ -208,35 +208,35 @@ export const ContentProvider = ({ children }) => {
 
   const saveContent = async (dataToSave) => {
     try {
-      const safeData = stripImagesForStorage(dataToSave);
-      
-      // Always save to localStorage first (instant)
-      localStorage.setItem('jedi-content', JSON.stringify(safeData));
-      console.log('💾 Saved content to localStorage');
-      
-      // Then try to save to server (for cross-device sync)
+      // First try to save to server (for cross-device sync)
       try {
-        console.log('🔄 Syncing to server...');
+        console.log('🔄 Saving to server...');
         const response = await fetch('/api/content', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(safeData)
+          body: JSON.stringify(dataToSave)
         });
         
         if (response.ok) {
           const result = await response.json();
-          console.log('✅ Content synced to server successfully');
+          console.log('✅ Content saved to server successfully');
           console.log('🌐 Changes will appear on other devices');
+          
+          // Also save to localStorage as backup
+          localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
           return true;
         } else {
           throw new Error(`Server returned ${response.status}`);
         }
       } catch (serverError) {
-        console.log('⚠️ Server sync failed, but localStorage worked:', serverError.message);
-        console.log('💡 Changes saved locally, will sync when server is available');
-        return true; // Still successful because localStorage worked
+        console.log('⚠️ Server save failed, using localStorage only:', serverError.message);
+        
+        // Fallback to localStorage only
+        localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
+        console.log('💾 Content saved to localStorage (device-specific)');
+        return true;
       }
     } catch (error) {
       console.warn('❌ Save failed completely:', error.message);
