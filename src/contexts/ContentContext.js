@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const ContentContext = createContext();
 
@@ -11,7 +11,9 @@ export const useContent = () => {
 };
 
 export const ContentProvider = ({ children }) => {
-  const [content, setContent] = useState({
+  // Load saved content from localStorage or use defaults
+  const savedContent = typeof window !== 'undefined' ? localStorage.getItem('jedicare-content') : null;
+  const initialContent = savedContent ? JSON.parse(savedContent) : {
     hero: {
       title: "Jedi Medical Centre",
       subtitle: "Level 3 Healthcare Facility",
@@ -22,7 +24,7 @@ export const ContentProvider = ({ children }) => {
     },
     about: {
       title: "About Jedi Medical Centre",
-      mainText: "Jedi Medical Centre is a fully operational Level 3 healthcare facility dedicated to providing quality medical services to the Kapsoya community and the greater Uasin Gishu region.",
+      mainText: "Jedi Medical Centre is a fully operational Level 3 healthcare facility dedicated to providing quality medical services to the Kapsoya community and greater Uasin Gishu region.",
       secondaryText: "Our commitment is to deliver accessible, reliable, and compassionate care that meets the diverse health needs of our community. We combine modern medical expertise with a deep understanding of local healthcare challenges.",
       galleryImages: []
     },
@@ -139,7 +141,16 @@ export const ContentProvider = ({ children }) => {
         image: ""
       }
     ]
-  });
+  };
+
+  const [content, setContent] = useState(initialContent);
+
+  // Save to localStorage whenever content changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('jedicare-content', JSON.stringify(content));
+    }
+  }, [content]);
 
   const updateContent = (section, data) => {
     setContent(prev => ({
