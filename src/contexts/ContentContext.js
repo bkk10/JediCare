@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 
 const ContentContext = createContext();
 
@@ -144,28 +144,52 @@ export const ContentProvider = ({ children }) => {
   };
 
   const [content, setContent] = useState(initialContent);
+  const timeoutRef = useRef(null);
 
-  // Save to localStorage whenever content changes
-  useEffect(() => {
+  // Debounced save to localStorage
+  const saveToStorage = (dataToSave) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('jedicare-content', JSON.stringify(content));
+      try {
+        localStorage.setItem('jedicare-content', JSON.stringify(dataToSave));
+      } catch (error) {
+        console.warn('localStorage quota exceeded, changes will not persist');
+      }
     }
+  };
+
+  // Save to localStorage whenever content changes (debounced)
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    timeoutRef.current = setTimeout(() => {
+      saveToStorage(content);
+    }, 1000); // Debounce for 1 second
   }, [content]);
 
   const updateContent = (section, data) => {
-    setContent(prev => ({
-      ...prev,
-      [section]: data
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        [section]: data
+      };
+      saveToStorage(newContent); // Save immediately for important updates
+      return newContent;
+    });
   };
 
   const updateService = (id, serviceData) => {
-    setContent(prev => ({
-      ...prev,
-      services: prev.services.map(service => 
-        service.id === id ? { ...service, ...serviceData } : service
-      )
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        services: prev.services.map(service => 
+          service.id === id ? { ...service, ...serviceData } : service
+        )
+      };
+      saveToStorage(newContent);
+      return newContent;
+    });
   };
 
   const addService = (serviceData) => {
@@ -174,17 +198,25 @@ export const ContentProvider = ({ children }) => {
       image: "",
       ...serviceData
     };
-    setContent(prev => ({
-      ...prev,
-      services: [...prev.services, newService]
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        services: [...prev.services, newService]
+      };
+      saveToStorage(newContent);
+      return newContent;
+    });
   };
 
   const deleteService = (id) => {
-    setContent(prev => ({
-      ...prev,
-      services: prev.services.filter(service => service.id !== id)
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        services: prev.services.filter(service => service.id !== id)
+      };
+      saveToStorage(newContent);
+      return newContent;
+    });
   };
 
   const uploadImage = (file) => {
@@ -203,23 +235,31 @@ export const ContentProvider = ({ children }) => {
   };
 
   const addGalleryImage = (imageUrl) => {
-    setContent(prev => ({
-      ...prev,
-      about: {
-        ...prev.about,
-        galleryImages: [...prev.about.galleryImages, imageUrl]
-      }
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        about: {
+          ...prev.about,
+          galleryImages: [...prev.about.galleryImages, imageUrl]
+        }
+      };
+      saveToStorage(newContent);
+      return newContent;
+    });
   };
 
   const removeGalleryImage = (index) => {
-    setContent(prev => ({
-      ...prev,
-      about: {
-        ...prev.about,
-        galleryImages: prev.about.galleryImages.filter((_, i) => i !== index)
-      }
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        about: {
+          ...prev.about,
+          galleryImages: prev.about.galleryImages.filter((_, i) => i !== index)
+        }
+      };
+      saveToStorage(newContent);
+      return newContent;
+    });
   };
 
   const addTestimonial = (testimonial) => {
@@ -227,42 +267,62 @@ export const ContentProvider = ({ children }) => {
       id: Date.now(),
       ...testimonial
     };
-    setContent(prev => ({
-      ...prev,
-      testimonials: [...prev.testimonials, newTestimonial]
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        testimonials: [...prev.testimonials, newTestimonial]
+      };
+      saveToStorage(newContent);
+      return newContent;
+    });
   };
 
   const updateTestimonial = (id, testimonialData) => {
-    setContent(prev => ({
-      ...prev,
-      testimonials: prev.testimonials.map(testimonial => 
-        testimonial.id === id ? { ...testimonial, ...testimonialData } : testimonial
-      )
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        testimonials: prev.testimonials.map(testimonial => 
+          testimonial.id === id ? { ...testimonial, ...testimonialData } : testimonial
+        )
+      };
+      saveToStorage(newContent);
+      return newContent;
+    });
   };
 
   const deleteTestimonial = (id) => {
-    setContent(prev => ({
-      ...prev,
-      testimonials: prev.testimonials.filter(testimonial => testimonial.id !== id)
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        testimonials: prev.testimonials.filter(testimonial => testimonial.id !== id)
+      };
+      saveToStorage(newContent);
+      return newContent;
+    });
   };
 
   const updateTeamMember = (id, teamData) => {
-    setContent(prev => ({
-      ...prev,
-      team: prev.team.map(member => 
-        member.id === id ? { ...member, ...teamData } : member
-      )
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        team: prev.team.map(member => 
+          member.id === id ? { ...member, ...teamData } : member
+        )
+      };
+      saveToStorage(newContent);
+      return newContent;
+    });
   };
 
   const deleteTeamMember = (id) => {
-    setContent(prev => ({
-      ...prev,
-      team: prev.team.filter(member => member.id !== id)
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        team: prev.team.filter(member => member.id !== id)
+      };
+      saveToStorage(newContent);
+      return newContent;
+    });
   };
 
   const addTeamMember = (teamData) => {
@@ -271,10 +331,14 @@ export const ContentProvider = ({ children }) => {
       image: "",
       ...teamData
     };
-    setContent(prev => ({
-      ...prev,
-      team: [...prev.team, newMember]
-    }));
+    setContent(prev => {
+      const newContent = {
+        ...prev,
+        team: [...prev.team, newMember]
+      };
+      saveToStorage(newContent);
+      return newContent;
+    });
   };
 
   const value = {
