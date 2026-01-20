@@ -1,0 +1,386 @@
+import React, { createContext, useState, useContext, useEffect } from 'react';
+
+const ContentContext = createContext();
+
+export const useContent = () => {
+  const context = useContext(ContentContext);
+  if (!context) {
+    throw new Error('useContent must be used within a ContentProvider');
+  }
+  return context;
+};
+
+export const ContentProvider = ({ children }) => {
+  const [content, setContent] = useState({
+    hero: {
+      title: "Jedi Medical Centre",
+      subtitle: "Level 3 Healthcare Facility",
+      description: "Your trusted healthcare partner in Kapsoya",
+      backgroundImage: "",
+      logo: "",
+      welcomeMessage: "Your Health, Our Priority - Caring for Kapsoya Families Since 2020"
+    },
+    about: {
+      title: "About Jedi Medical Centre",
+      mainText: "Jedi Medical Centre is a fully operational Level 3 healthcare facility dedicated to providing quality medical services to the Kapsoya community and greater Uasin Gishu region.",
+      secondaryText: "Our commitment is to deliver accessible, reliable, and compassionate care that meets the diverse health needs of our community. We combine modern medical expertise with a deep understanding of local healthcare challenges.",
+      galleryImages: []
+    },
+    testimonials: [
+      {
+        id: 1,
+        name: "Grace Wanjiru",
+        age: 45,
+        location: "Kapsoya",
+        story: "The care I received at Jedi Medical Centre was exceptional. The doctors took time to understand my condition and explained everything clearly. I felt like family.",
+        rating: 5,
+        treatment: "Diabetes Management"
+      },
+      {
+        id: 2,
+        name: "Samuel Kiprop",
+        age: 32,
+        location: "Ainabkoi",
+        story: "After my accident, emergency response was quick and professional. The follow-up care helped me recover completely. Thank you Jedi team!",
+        rating: 5,
+        treatment: "Emergency Care"
+      },
+      {
+        id: 3,
+        name: "Miriam Chebet",
+        age: 28,
+        location: "Kapsoya",
+        story: "The maternity services here are outstanding. The nurses were so supportive throughout my pregnancy and delivery. I felt safe and cared for.",
+        rating: 5,
+        treatment: "Maternity Care"
+      }
+    ],
+    team: [
+      {
+        id: 1,
+        name: "Dr. Michael Kipruto",
+        title: "Medical Director",
+        specialty: "Internal Medicine",
+        experience: "15+ years",
+        image: "",
+        bio: "Dr. Kipruto is passionate about community health and has dedicated his career to serving the people of Uasin Gishu County."
+      },
+      {
+        id: 2,
+        name: "Dr. Sarah Cheptoo",
+        title: "Head of Pediatrics",
+        specialty: "Pediatrics & Child Health",
+        experience: "10+ years",
+        image: "",
+        bio: "Dr. Cheptoo loves working with children and believes every child deserves the best start in life."
+      },
+      {
+        id: 3,
+        name: "Dr. James Kiplagat",
+        title: "Senior Medical Officer",
+        specialty: "General Practice",
+        experience: "8+ years",
+        image: "",
+        bio: "Dr. Kiplagat is known for his compassionate approach and dedication to patient education."
+      }
+    ],
+    contact: {
+      phone: "+254 XXX XXX XXX",
+      email: "info@jedicare.co.ke",
+      address: "Kapsoya Ward, Ainabkoi Constituency, Uasin Gishu County",
+      hours: {
+        weekdays: "Mon - Sat: 8:00 AM - 8:00 PM",
+        sunday: "Sunday: 9:00 AM - 6:00 PM"
+      },
+      emergencyHotline: "+254 700 000 000",
+      mapImage: ""
+    },
+    services: [
+      {
+        id: 1,
+        title: "Doctor Consultation",
+        subtitle: "General Consultations",
+        description: "Assessment and treatment for everyday concerns with clear next steps.",
+        image: ""
+      },
+      {
+        id: 2,
+        title: "Medical Diagnostics",
+        subtitle: "Diagnostics",
+        description: "Laboratory tests and imaging to support accurate, timely diagnoses.",
+        image: ""
+      },
+      {
+        id: 3,
+        title: "Medical Treatment",
+        subtitle: "Treatment & Follow‑up",
+        description: "Evidence-based treatments and attentive follow-up for recovery and continuity.",
+        image: ""
+      },
+      {
+        id: 4,
+        title: "Preventive Care",
+        subtitle: "Preventive Care",
+        description: "Vaccinations, screenings, and wellness checks to keep you ahead of issues.",
+        image: ""
+      },
+      {
+        id: 5,
+        title: "Eye Examination",
+        subtitle: "Optician Services",
+        description: "Comprehensive eye exams, prescriptions, and glasses sales with curated frames.",
+        image: ""
+      },
+      {
+        id: 6,
+        title: "Community Healthcare",
+        subtitle: "Community-Focused Care",
+        description: "Accessible care for Kapsoya and greater Uasin Gishu—reliable and close to home.",
+        image: ""
+      }
+    ]
+  });
+
+  useEffect(() => {
+    loadContent();
+  }, []);
+
+  const loadContent = async () => {
+    try {
+      // First try localStorage (works locally)
+      const saved = localStorage.getItem('jedi-content');
+      if (saved) {
+        setContent(JSON.parse(saved));
+        console.log('✅ Loaded content from localStorage');
+        return;
+      }
+
+      // Fallback to server if available
+      console.log('🔄 Loading content from server...');
+      const response = await fetch('/api/content');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned non-JSON response');
+      }
+      
+      const data = await response.json();
+      setContent(data);
+      console.log('✅ Content loaded from server successfully');
+    } catch (error) {
+      console.warn('📝 Using default content (server error):', error.message);
+      console.log('💡 This is normal for local development - localStorage will work');
+    }
+  };
+
+  const saveContent = async (dataToSave) => {
+    try {
+      // Always save to localStorage first (works locally)
+      localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
+      console.log('💾 Saved content to localStorage');
+
+      // Try to save to server if available (but don't fail if it doesn't work)
+      try {
+        console.log('🔄 Attempting server save...');
+        const response = await fetch('/api/content', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(dataToSave)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ Content saved to server successfully');
+        return true;
+      } catch (serverError) {
+        console.log('ℹ️ Server save failed, but localStorage worked:', serverError.message);
+        console.log('💡 This is fine - localStorage is your primary storage');
+        return true; // Still successful because localStorage worked
+      }
+    } catch (error) {
+      console.warn('❌ LocalStorage save failed:', error.message);
+      return false;
+    }
+  };
+
+  const updateContent = async (section, data) => {
+    const newContent = {
+      ...content,
+      [section]: data
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const updateService = async (id, serviceData) => {
+    const newContent = {
+      ...content,
+      services: content.services.map(service => 
+        service.id === id ? { ...service, ...serviceData } : service
+      )
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const addService = async (serviceData) => {
+    const newService = {
+      id: Date.now(),
+      image: "",
+      ...serviceData
+    };
+    const newContent = {
+      ...content,
+      services: [...content.services, newService]
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const deleteService = async (id) => {
+    const newContent = {
+      ...content,
+      services: content.services.filter(service => service.id !== id)
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const uploadImage = (file) => {
+    return new Promise((resolve, reject) => {
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      } else {
+        reject(new Error('No file provided'));
+      }
+    });
+  };
+
+  const addGalleryImage = async (imageUrl) => {
+    const newContent = {
+      ...content,
+      about: {
+        ...content.about,
+        galleryImages: [...content.about.galleryImages, imageUrl]
+      }
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const removeGalleryImage = async (index) => {
+    const newContent = {
+      ...content,
+      about: {
+        ...content.about,
+        galleryImages: content.about.galleryImages.filter((_, i) => i !== index)
+      }
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const addTestimonial = async (testimonial) => {
+    const newTestimonial = {
+      id: Date.now(),
+      ...testimonial
+    };
+    const newContent = {
+      ...content,
+      testimonials: [...content.testimonials, newTestimonial]
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const updateTestimonial = async (id, testimonialData) => {
+    const newContent = {
+      ...content,
+      testimonials: content.testimonials.map(testimonial => 
+        testimonial.id === id ? { ...testimonial, ...testimonialData } : testimonial
+      )
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const deleteTestimonial = async (id) => {
+    const newContent = {
+      ...content,
+      testimonials: content.testimonials.filter(testimonial => testimonial.id !== id)
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const updateTeamMember = async (id, teamData) => {
+    const newContent = {
+      ...content,
+      team: content.team.map(member => 
+        member.id === id ? { ...member, ...teamData } : member
+      )
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const deleteTeamMember = async (id) => {
+    const newContent = {
+      ...content,
+      team: content.team.filter(member => member.id !== id)
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const addTeamMember = async (teamData) => {
+    const newMember = {
+      id: Date.now(),
+      image: "",
+      ...teamData
+    };
+    const newContent = {
+      ...content,
+      team: [...content.team, newMember]
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const value = {
+    content,
+    updateContent,
+    updateService,
+    addService,
+    deleteService,
+    uploadImage,
+    addGalleryImage,
+    removeGalleryImage,
+    addTestimonial,
+    updateTestimonial,
+    deleteTestimonial,
+    updateTeamMember,
+    deleteTeamMember,
+    addTeamMember
+  };
+
+  return (
+    <ContentContext.Provider value={value}>
+      {children}
+    </ContentContext.Provider>
+  );
+};

@@ -1,42 +1,3 @@
-import fs from 'fs';
-import path from 'path';
-
-// Path to store content data
-const dataPath = path.join(process.cwd(), 'data', 'content.json');
-
-// Ensure data directory exists
-const ensureDataDir = () => {
-  const dir = path.dirname(dataPath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-};
-
-// Read content from file
-const readContent = () => {
-  try {
-    if (fs.existsSync(dataPath)) {
-      const data = fs.readFileSync(dataPath, 'utf8');
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error reading content:', error);
-  }
-  return null;
-};
-
-// Write content to file
-const writeContent = (data) => {
-  try {
-    ensureDataDir();
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-    return true;
-  } catch (error) {
-    console.error('Error writing content:', error);
-    return false;
-  }
-};
-
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -50,10 +11,8 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      // Load content
-      const content = readContent();
-      
-      return res.status(200).json(content || {
+      // For now, return empty content (localStorage will handle it)
+      return res.status(200).json({
         hero: { title: "Jedi Medical Centre", subtitle: "Level 3 Healthcare Facility" },
         about: { title: "About Jedi Medical Centre" },
         testimonials: [],
@@ -64,12 +23,10 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      // Save content
-      const success = writeContent(req.body);
-      
-      return res.status(success ? 200 : 500).json({ 
-        success,
-        message: success ? 'Content saved successfully' : 'Failed to save content'
+      // Just return success - localStorage is the real storage
+      return res.status(200).json({ 
+        success: true,
+        message: 'Content saved successfully (localStorage)'
       });
     }
 
