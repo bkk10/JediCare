@@ -147,7 +147,7 @@ export const ContentProvider = ({ children }) => {
 
   const loadContent = async () => {
     try {
-      // First try localStorage (works locally)
+      // Load from localStorage (our primary storage)
       const saved = localStorage.getItem('jedi-content');
       if (saved) {
         setContent(JSON.parse(saved));
@@ -155,57 +155,22 @@ export const ContentProvider = ({ children }) => {
         return;
       }
 
-      // Fallback to server if available
-      console.log('🔄 Loading content from server...');
-      const response = await fetch('/api/content');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Server returned non-JSON response');
-      }
-      
-      const data = await response.json();
-      setContent(data);
-      console.log('✅ Content loaded from server successfully');
+      // No saved content - use defaults
+      console.log('📝 No saved content found - using defaults');
     } catch (error) {
-      console.warn('📝 Using default content (server error):', error.message);
-      console.log('💡 This is normal for local development - localStorage will work');
+      console.warn('📝 Using default content (localStorage error):', error.message);
     }
   };
 
   const saveContent = async (dataToSave) => {
     try {
-      // Always save to localStorage first (works locally)
+      // Save to localStorage (this is our primary storage)
       localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
       console.log('💾 Saved content to localStorage');
-
-      // Try to save to server if available (but don't fail if it doesn't work)
-      try {
-        console.log('🔄 Attempting server save...');
-        const response = await fetch('/api/content', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(dataToSave)
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        console.log('✅ Content saved to server successfully');
-        return true;
-      } catch (serverError) {
-        console.log('ℹ️ Server save failed, but localStorage worked:', serverError.message);
-        console.log('💡 This is fine - localStorage is your primary storage');
-        return true; // Still successful because localStorage worked
-      }
+      
+      // � Server save disabled (Vercel has no DB yet)
+      console.log('ℹ️ Server save skipped (no backend storage configured)');
+      return true;
     } catch (error) {
       console.warn('❌ LocalStorage save failed:', error.message);
       return false;
