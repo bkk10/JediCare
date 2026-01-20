@@ -5,7 +5,7 @@ import Home from './pages/Home';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider } from './contexts/AuthContext';
-import { SimpleContext as ContentProvider } from './contexts/SimpleContext';
+import { ContentProvider } from './contexts/ContentContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
