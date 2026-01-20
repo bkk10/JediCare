@@ -1,6 +1,30 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const ContentContext = createContext();
+const stripImagesForStorage = (data) => ({
+  ...data,
+
+  hero: {
+    ...data.hero,
+    backgroundImage: "",
+    logo: ""
+  },
+
+  about: {
+    ...data.about,
+    galleryImages: []
+  },
+
+  team: data.team.map(member => ({
+    ...member,
+    image: ""
+  })),
+
+  services: data.services.map(service => ({
+    ...service,
+    image: ""
+  }))
+});
 
 export const useContent = () => {
   const context = useContext(ContentContext);
@@ -162,20 +186,25 @@ export const ContentProvider = ({ children }) => {
     }
   };
 
-  const saveContent = async (dataToSave) => {
-    try {
-      // Save to localStorage (this is our primary storage)
-      localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
-      console.log('💾 Saved content to localStorage');
-      
-      // � Server save disabled (Vercel has no DB yet)
-      console.log('ℹ️ Server save skipped (no backend storage configured)');
-      return true;
-    } catch (error) {
-      console.warn('❌ LocalStorage save failed:', error.message);
-      return false;
-    }
-  };
+const saveContent = async (dataToSave) => {
+  try {
+    const safeData = stripImagesForStorage(dataToSave);
+
+    localStorage.setItem(
+      'jedi-content',
+      JSON.stringify(safeData)
+    );
+
+    console.log('💾 Saved content to localStorage (images stripped)');
+    console.log('ℹ️ Server save skipped (no backend storage configured)');
+    return true;
+
+  } catch (error) {
+    console.warn('❌ LocalStorage save failed:', error.message);
+    return false;
+  }
+};
+
 
   const updateContent = async (section, data) => {
     const newContent = {
