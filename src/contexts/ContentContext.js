@@ -147,21 +147,30 @@ export const ContentProvider = ({ children }) => {
 
   const loadContent = async () => {
     try {
+      console.log('🔄 Loading content from server...');
       const response = await fetch('/api/content');
-      if (response.ok) {
-        const data = await response.json();
-        setContent(data);
-        console.log('✅ Content loaded from server');
-      } else {
-        console.log('📝 Using default content (server not available)');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned non-JSON response');
+      }
+      
+      const data = await response.json();
+      setContent(data);
+      console.log('✅ Content loaded from server successfully');
     } catch (error) {
-      console.log('📝 Using default content (server error):', error.message);
+      console.warn('📝 Using default content (server error):', error.message);
+      console.log('💡 This is normal for local development - the API will work when deployed');
     }
   };
 
   const saveContent = async (dataToSave) => {
     try {
+      console.log('💾 Saving content to server...');
       const response = await fetch('/api/content', {
         method: 'POST',
         headers: {
@@ -170,13 +179,17 @@ export const ContentProvider = ({ children }) => {
         body: JSON.stringify(dataToSave)
       });
       
-      if (response.ok) {
-        console.log('✅ Content saved to server');
-      } else {
-        console.warn('❌ Failed to save to server');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+      
+      const result = await response.json();
+      console.log('✅ Content saved to server successfully');
+      return true;
     } catch (error) {
       console.warn('❌ Server save error:', error.message);
+      console.log('💡 This is normal for local development - API will work when deployed');
+      return false;
     }
   };
 
