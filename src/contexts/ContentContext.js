@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const ContentContext = createContext();
 
@@ -141,39 +141,86 @@ export const ContentProvider = ({ children }) => {
     ]
   });
 
-  const updateContent = (section, data) => {
-    setContent(prev => ({
-      ...prev,
-      [section]: data
-    }));
+  useEffect(() => {
+    loadContent();
+  }, []);
+
+  const loadContent = async () => {
+    try {
+      const response = await fetch('/api/content');
+      if (response.ok) {
+        const data = await response.json();
+        setContent(data);
+        console.log('✅ Content loaded from server');
+      } else {
+        console.log('📝 Using default content (server not available)');
+      }
+    } catch (error) {
+      console.log('📝 Using default content (server error):', error.message);
+    }
   };
 
-  const updateService = (id, serviceData) => {
-    setContent(prev => ({
-      ...prev,
-      services: prev.services.map(service => 
+  const saveContent = async (dataToSave) => {
+    try {
+      const response = await fetch('/api/content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToSave)
+      });
+      
+      if (response.ok) {
+        console.log('✅ Content saved to server');
+      } else {
+        console.warn('❌ Failed to save to server');
+      }
+    } catch (error) {
+      console.warn('❌ Server save error:', error.message);
+    }
+  };
+
+  const updateContent = async (section, data) => {
+    const newContent = {
+      ...content,
+      [section]: data
+    };
+    setContent(newContent);
+    await saveContent(newContent);
+  };
+
+  const updateService = async (id, serviceData) => {
+    const newContent = {
+      ...content,
+      services: content.services.map(service => 
         service.id === id ? { ...service, ...serviceData } : service
       )
-    }));
+    };
+    setContent(newContent);
+    await saveContent(newContent);
   };
 
-  const addService = (serviceData) => {
+  const addService = async (serviceData) => {
     const newService = {
       id: Date.now(),
       image: "",
       ...serviceData
     };
-    setContent(prev => ({
-      ...prev,
-      services: [...prev.services, newService]
-    }));
+    const newContent = {
+      ...content,
+      services: [...content.services, newService]
+    };
+    setContent(newContent);
+    await saveContent(newContent);
   };
 
-  const deleteService = (id) => {
-    setContent(prev => ({
-      ...prev,
-      services: prev.services.filter(service => service.id !== id)
-    }));
+  const deleteService = async (id) => {
+    const newContent = {
+      ...content,
+      services: content.services.filter(service => service.id !== id)
+    };
+    setContent(newContent);
+    await saveContent(newContent);
   };
 
   const uploadImage = (file) => {
@@ -191,79 +238,95 @@ export const ContentProvider = ({ children }) => {
     });
   };
 
-  const addGalleryImage = (imageUrl) => {
-    setContent(prev => ({
-      ...prev,
+  const addGalleryImage = async (imageUrl) => {
+    const newContent = {
+      ...content,
       about: {
-        ...prev.about,
-        galleryImages: [...prev.about.galleryImages, imageUrl]
+        ...content.about,
+        galleryImages: [...content.about.galleryImages, imageUrl]
       }
-    }));
+    };
+    setContent(newContent);
+    await saveContent(newContent);
   };
 
-  const removeGalleryImage = (index) => {
-    setContent(prev => ({
-      ...prev,
+  const removeGalleryImage = async (index) => {
+    const newContent = {
+      ...content,
       about: {
-        ...prev.about,
-        galleryImages: prev.about.galleryImages.filter((_, i) => i !== index)
+        ...content.about,
+        galleryImages: content.about.galleryImages.filter((_, i) => i !== index)
       }
-    }));
+    };
+    setContent(newContent);
+    await saveContent(newContent);
   };
 
-  const addTestimonial = (testimonial) => {
+  const addTestimonial = async (testimonial) => {
     const newTestimonial = {
       id: Date.now(),
       ...testimonial
     };
-    setContent(prev => ({
-      ...prev,
-      testimonials: [...prev.testimonials, newTestimonial]
-    }));
+    const newContent = {
+      ...content,
+      testimonials: [...content.testimonials, newTestimonial]
+    };
+    setContent(newContent);
+    await saveContent(newContent);
   };
 
-  const updateTestimonial = (id, testimonialData) => {
-    setContent(prev => ({
-      ...prev,
-      testimonials: prev.testimonials.map(testimonial => 
+  const updateTestimonial = async (id, testimonialData) => {
+    const newContent = {
+      ...content,
+      testimonials: content.testimonials.map(testimonial => 
         testimonial.id === id ? { ...testimonial, ...testimonialData } : testimonial
       )
-    }));
+    };
+    setContent(newContent);
+    await saveContent(newContent);
   };
 
-  const deleteTestimonial = (id) => {
-    setContent(prev => ({
-      ...prev,
-      testimonials: prev.testimonials.filter(testimonial => testimonial.id !== id)
-    }));
+  const deleteTestimonial = async (id) => {
+    const newContent = {
+      ...content,
+      testimonials: content.testimonials.filter(testimonial => testimonial.id !== id)
+    };
+    setContent(newContent);
+    await saveContent(newContent);
   };
 
-  const updateTeamMember = (id, teamData) => {
-    setContent(prev => ({
-      ...prev,
-      team: prev.team.map(member => 
+  const updateTeamMember = async (id, teamData) => {
+    const newContent = {
+      ...content,
+      team: content.team.map(member => 
         member.id === id ? { ...member, ...teamData } : member
       )
-    }));
+    };
+    setContent(newContent);
+    await saveContent(newContent);
   };
 
-  const deleteTeamMember = (id) => {
-    setContent(prev => ({
-      ...prev,
-      team: prev.team.filter(member => member.id !== id)
-    }));
+  const deleteTeamMember = async (id) => {
+    const newContent = {
+      ...content,
+      team: content.team.filter(member => member.id !== id)
+    };
+    setContent(newContent);
+    await saveContent(newContent);
   };
 
-  const addTeamMember = (teamData) => {
+  const addTeamMember = async (teamData) => {
     const newMember = {
       id: Date.now(),
       image: "",
       ...teamData
     };
-    setContent(prev => ({
-      ...prev,
-      team: [...prev.team, newMember]
-    }));
+    const newContent = {
+      ...content,
+      team: [...content.team, newMember]
+    };
+    setContent(newContent);
+    await saveContent(newContent);
   };
 
   const value = {
