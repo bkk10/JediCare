@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, MapPin, User, MessageSquare, Heart } from 'lucide-react';
+import { Star, MapPin, User, MessageSquare } from 'lucide-react';
 
 const TestimonialCard = ({ testimonial }) => {
   const renderStars = (rating) => {

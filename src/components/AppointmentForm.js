@@ -50,7 +50,7 @@ const AppointmentForm = () => {
     }
     
     // Phone validation (simple)
-    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    const phoneRegex = /^[\d\s\-+()]+$/;
     if (formData.phone && !phoneRegex.test(formData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
     }

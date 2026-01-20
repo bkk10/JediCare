@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { X, Image as ImageIcon } from 'lucide-react';
 
 const ImageUpload = ({ 
   currentImage, 

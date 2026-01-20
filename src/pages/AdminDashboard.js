@@ -11,7 +11,6 @@ import {
   Plus,
   Trash2,
   Edit,
-  Image,
   Star,
   Users,
   User
