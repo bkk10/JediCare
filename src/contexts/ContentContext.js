@@ -164,9 +164,33 @@ export const ContentProvider = ({ children }) => {
     }
     
     timeoutRef.current = setTimeout(() => {
-      saveToStorage(content);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('jedicare-content', JSON.stringify(content));
+          console.log('Content saved to localStorage');
+        } catch (error) {
+          console.warn('localStorage quota exceeded, changes will not persist');
+          // Fallback to memory storage if localStorage is full
+        }
+      }
     }, 1000); // Debounce for 1 second
   }, [content]);
+
+  // Load content on mount and check for persistence
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('jedicare-content');
+      if (saved) {
+        try {
+          const parsedContent = JSON.parse(saved);
+          setContent(parsedContent);
+          console.log('Content loaded from localStorage');
+        } catch (error) {
+          console.warn('Failed to parse saved content, using defaults');
+        }
+      }
+    }
+  }, []); // Empty dependency array = run only once on mount
 
   const updateContent = (section, data) => {
     setContent(prev => {
