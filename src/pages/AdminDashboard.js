@@ -15,7 +15,6 @@ import {
   Users,
   User
 } from 'lucide-react';
-import ImageUpload from '../components/ImageUpload';
 
 const AdminDashboard = () => {
   const { logout } = useAuth();
@@ -234,16 +233,7 @@ const AdminDashboard = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     />
                   </div>
-                  <ImageUpload
-                    currentImage={content.hero.backgroundImage}
-                    onImageChange={(image) => updateContent('hero', { ...content.hero, backgroundImage: image })}
-                    label="Background Image"
-                  />
-                  <ImageUpload
-                    currentImage={content.hero.logo}
-                    onImageChange={(image) => updateContent('hero', { ...content.hero, logo: image })}
-                    label="Logo"
-                  />
+                  {/* Hero images are now static - removed from admin panel */}
                   <button
                     onClick={handleSaveHero}
                     className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
