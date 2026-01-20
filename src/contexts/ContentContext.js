@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const ContentContext = createContext();
+
 const stripImagesForStorage = (data) => ({
   ...data,
 
@@ -171,40 +172,77 @@ export const ContentProvider = ({ children }) => {
 
   const loadContent = async () => {
     try {
-      // Load from localStorage (our primary storage)
-      const saved = localStorage.getItem('jedi-content');
-      if (saved) {
-        setContent(JSON.parse(saved));
-        console.log('✅ Loaded content from localStorage');
+      // First try server (for cross-device sync)
+      console.log('🔄 Loading content from server...');
+      const response = await fetch('/api/content');
+      
+      if (response.ok) {
+        const data = await response.json();
+        setContent(data);
+        
+        // Also save to localStorage as backup
+        localStorage.setItem('jedi-content', JSON.stringify(data));
+        console.log('✅ Content loaded from server and cached locally');
         return;
+      } else {
+        throw new Error(`Server returned ${response.status}`);
       }
-
-      // No saved content - use defaults
-      console.log('📝 No saved content found - using defaults');
     } catch (error) {
-      console.warn('📝 Using default content (localStorage error):', error.message);
+      console.log('📱 Server unavailable, trying localStorage...');
+      
+      // Fallback to localStorage
+      try {
+        const saved = localStorage.getItem('jedi-content');
+        if (saved) {
+          setContent(JSON.parse(saved));
+          console.log('✅ Loaded content from localStorage (offline mode)');
+          return;
+        }
+      } catch (localError) {
+        console.warn('❌ LocalStorage also failed:', localError.message);
+      }
+      
+      console.log('📝 Using default content (no saved data found)');
     }
   };
 
-const saveContent = async (dataToSave) => {
-  try {
-    const safeData = stripImagesForStorage(dataToSave);
-
-    localStorage.setItem(
-      'jedi-content',
-      JSON.stringify(safeData)
-    );
-
-    console.log('💾 Saved content to localStorage (images stripped)');
-    console.log('ℹ️ Server save skipped (no backend storage configured)');
-    return true;
-
-  } catch (error) {
-    console.warn('❌ LocalStorage save failed:', error.message);
-    return false;
-  }
-};
-
+  const saveContent = async (dataToSave) => {
+    try {
+      const safeData = stripImagesForStorage(dataToSave);
+      
+      // Always save to localStorage first (instant)
+      localStorage.setItem('jedi-content', JSON.stringify(safeData));
+      console.log('💾 Saved content to localStorage');
+      
+      // Then try to save to server (for cross-device sync)
+      try {
+        console.log('🔄 Syncing to server...');
+        const response = await fetch('/api/content', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(safeData)
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Content synced to server successfully');
+          console.log('🌐 Changes will appear on other devices');
+          return true;
+        } else {
+          throw new Error(`Server returned ${response.status}`);
+        }
+      } catch (serverError) {
+        console.log('⚠️ Server sync failed, but localStorage worked:', serverError.message);
+        console.log('💡 Changes saved locally, will sync when server is available');
+        return true; // Still successful because localStorage worked
+      }
+    } catch (error) {
+      console.warn('❌ Save failed completely:', error.message);
+      return false;
+    }
+  };
 
   const updateContent = async (section, data) => {
     const newContent = {
