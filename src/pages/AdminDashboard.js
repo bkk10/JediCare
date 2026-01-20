@@ -15,6 +15,7 @@ import {
   Users,
   User
 } from 'lucide-react';
+import ImageUpload from '../components/ImageUpload';
 
 const AdminDashboard = () => {
   const { logout } = useAuth();

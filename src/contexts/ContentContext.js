@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 const ContentContext = createContext();
 
@@ -171,78 +172,55 @@ export const ContentProvider = ({ children }) => {
   }, []);
 
   const loadContent = async () => {
-    try {
-      // First try server (for cross-device sync)
-      console.log('🔄 Loading content from server...');
-      const response = await fetch('/api/content');
-      
-      if (response.ok) {
-        const data = await response.json();
-        setContent(data);
-        
-        // Also save to localStorage as backup
-        localStorage.setItem('jedi-content', JSON.stringify(data));
-        console.log('✅ Content loaded from server and cached locally');
-        return;
-      } else {
-        throw new Error(`Server returned ${response.status}`);
-      }
-    } catch (error) {
-      console.log('📱 Server unavailable, trying localStorage...');
-      
-      // Fallback to localStorage
-      try {
-        const saved = localStorage.getItem('jedi-content');
-        if (saved) {
-          setContent(JSON.parse(saved));
-          console.log('✅ Loaded content from localStorage (offline mode)');
-          return;
-        }
-      } catch (localError) {
-        console.warn('❌ LocalStorage also failed:', localError.message);
-      }
-      
-      console.log('📝 Using default content (no saved data found)');
+  console.log('🔄 Loading content from Supabase...');
+
+  const { data, error } = await supabase
+    .from('content')
+    .select('data')
+    .limit(1)
+    .single();
+
+  if (error || !data?.data) {
+    console.warn('⚠️ Supabase failed, falling back to localStorage');
+
+    const saved = localStorage.getItem('jedi-content');
+    if (saved) {
+      setContent(JSON.parse(saved));
+      return;
     }
-  };
+
+    console.log('📝 Using default content');
+    return;
+  }
+
+  setContent(data.data);
+  localStorage.setItem('jedi-content', JSON.stringify(data.data));
+  console.log('✅ Loaded from Supabase');
+};
+
 
   const saveContent = async (dataToSave) => {
-    try {
-      // First try to save to server (for cross-device sync)
-      try {
-        console.log('🔄 Saving to server...');
-        const response = await fetch('/api/content', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(dataToSave)
-        });
-        
-        if (response.ok) {
-          const result = await response.json();
-          console.log('✅ Content saved to server successfully');
-          console.log('🌐 Changes will appear on other devices');
-          
-          // Also save to localStorage as backup
-          localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
-          return true;
-        } else {
-          throw new Error(`Server returned ${response.status}`);
-        }
-      } catch (serverError) {
-        console.log('⚠️ Server save failed, using localStorage only:', serverError.message);
-        
-        // Fallback to localStorage only
-        localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
-        console.log('💾 Content saved to localStorage (device-specific)');
-        return true;
-      }
-    } catch (error) {
-      console.warn('❌ Save failed completely:', error.message);
-      return false;
-    }
-  };
+  console.log('💾 Saving to Supabase...');
+
+  const { error } = await supabase
+    .from('content')
+    .update({
+      data: dataToSave,
+      updated_at: new Date()
+    })
+    .neq('id', null); // updates the single row
+
+  if (error) {
+    console.warn('⚠️ Supabase save failed, using localStorage only');
+    localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
+    return false;
+  }
+
+  localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
+  console.log('✅ Saved to Supabase');
+  return true;
+};
+
 
   const updateContent = async (section, data) => {
     const newContent = {
