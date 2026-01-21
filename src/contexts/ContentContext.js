@@ -1,32 +1,8 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { debounce } from '../utils/performance';
 
 const ContentContext = createContext();
-
-const stripImagesForStorage = (data) => ({
-  ...data,
-
-  hero: {
-    ...data.hero,
-    backgroundImage: "",
-    logo: ""
-  },
-
-  about: {
-    ...data.about,
-    galleryImages: []
-  },
-
-  team: data.team.map(member => ({
-    ...member,
-    image: ""
-  })),
-
-  services: data.services.map(service => ({
-    ...service,
-    image: ""
-  }))
-});
 
 export const useContent = () => {
   const context = useContext(ContentContext);
@@ -48,7 +24,7 @@ export const ContentProvider = ({ children }) => {
     },
     about: {
       title: "About Jedi Medical Centre",
-      mainText: "Jedi Medical Centre is a fully operational Level 3 healthcare facility dedicated to providing quality medical services to the Kapsoya community and greater Uasin Gishu region.",
+      mainText: "Jedi Medical Centre is a fully operational Level 3 healthcare facility dedicated to providing quality medical services to Kapsoya community and greater Uasin Gishu region.",
       secondaryText: "Our commitment is to deliver accessible, reliable, and compassionate care that meets the diverse health needs of our community. We combine modern medical expertise with a deep understanding of local healthcare challenges.",
       galleryImages: []
     },
@@ -172,55 +148,57 @@ export const ContentProvider = ({ children }) => {
   }, []);
 
   const loadContent = async () => {
-  console.log('🔄 Loading content from Supabase...');
+    console.log('🔄 Loading content from Supabase...');
 
-  const { data, error } = await supabase
-    .from('content')
-    .select('data')
-    .limit(1)
-    .single();
+    const { data, error } = await supabase
+      .from('content')
+      .select('data')
+      .eq('id', 1)
+      .single();
 
-  if (error || !data?.data) {
-    console.warn('⚠️ Supabase failed, falling back to localStorage');
+    if (error) {
+      console.warn('⚠️ Supabase failed, falling back to localStorage', error.message);
+    }
+
+    if (data?.data) {
+      setContent(data.data);
+      localStorage.setItem('jedi-content', JSON.stringify(data.data));
+      console.log('✅ Loaded from Supabase');
+      return;
+    }
 
     const saved = localStorage.getItem('jedi-content');
     if (saved) {
       setContent(JSON.parse(saved));
+      console.log('📦 Loaded from localStorage');
       return;
     }
 
     console.log('📝 Using default content');
-    return;
-  }
+  };
 
-  setContent(data.data);
-  localStorage.setItem('jedi-content', JSON.stringify(data.data));
-  console.log('✅ Loaded from Supabase');
-};
+  const saveContent = useCallback(debounce(async (dataToSave) => {
+    console.log('💾 Saving to Supabase...');
 
+    // Use upsert to either insert or update
+    const { error } = await supabase
+      .from('content')
+      .upsert({
+        id: 1,
+        data: dataToSave,
+        updated_at: new Date()
+      });
 
-  const saveContent = async (dataToSave) => {
-  console.log('💾 Saving to Supabase...');
+    if (error) {
+      console.warn('⚠️ Supabase save failed, using localStorage only', error.message);
+      localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
+      return false;
+    }
 
-  const { error } = await supabase
-    .from('content')
-    .update({
-      data: dataToSave,
-      updated_at: new Date()
-    })
-    .neq('id', null); // updates the single row
-
-  if (error) {
-    console.warn('⚠️ Supabase save failed, using localStorage only');
     localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
-    return false;
-  }
-
-  localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
-  console.log('✅ Saved to Supabase');
-  return true;
-};
-
+    console.log('✅ Saved to Supabase');
+    return true;
+  }, 1000), []);
 
   const updateContent = async (section, data) => {
     const newContent = {
@@ -371,7 +349,7 @@ export const ContentProvider = ({ children }) => {
     await saveContent(newContent);
   };
 
-  const value = {
+  const value = useMemo(() => ({
     content,
     updateContent,
     updateService,
@@ -386,7 +364,7 @@ export const ContentProvider = ({ children }) => {
     updateTeamMember,
     deleteTeamMember,
     addTeamMember
-  };
+  }), [content, updateContent, updateService, addService, deleteService, uploadImage, addGalleryImage, removeGalleryImage, addTestimonial, updateTestimonial, deleteTestimonial, updateTeamMember, deleteTeamMember, addTeamMember]);
 
   return (
     <ContentContext.Provider value={value}>
