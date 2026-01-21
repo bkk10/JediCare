@@ -1,6 +1,5 @@
-import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { debounce } from '../utils/performance';
 
 const ContentContext = createContext();
 
@@ -177,28 +176,31 @@ export const ContentProvider = ({ children }) => {
     console.log('📝 Using default content');
   };
 
-  const saveContent = useCallback(debounce(async (dataToSave) => {
+  const saveContent = async (dataToSave) => {
     console.log('💾 Saving to Supabase...');
 
-    // Use upsert to either insert or update
-    const { error } = await supabase
-      .from('content')
-      .upsert({
-        id: 1,
-        data: dataToSave,
-        updated_at: new Date()
-      });
+    try {
+      const { error } = await supabase
+        .from('content')
+        .upsert({
+          id: 1,
+          data: dataToSave,
+          updated_at: new Date()
+        });
 
-    if (error) {
+      if (!error) {
+        localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
+        console.log('✅ Saved to Supabase');
+        return true;
+      } else {
+        throw error;
+      }
+    } catch (error) {
       console.warn('⚠️ Supabase save failed, using localStorage only', error.message);
       localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
       return false;
     }
-
-    localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
-    console.log('✅ Saved to Supabase');
-    return true;
-  }, 1000), []);
+  };
 
   const updateContent = async (section, data) => {
     const newContent = {
@@ -349,7 +351,7 @@ export const ContentProvider = ({ children }) => {
     await saveContent(newContent);
   };
 
-  const value = useMemo(() => ({
+  const value = {
     content,
     updateContent,
     updateService,
@@ -364,7 +366,7 @@ export const ContentProvider = ({ children }) => {
     updateTeamMember,
     deleteTeamMember,
     addTeamMember
-  }), [content, updateContent, updateService, addService, deleteService, uploadImage, addGalleryImage, removeGalleryImage, addTestimonial, updateTestimonial, deleteTestimonial, updateTeamMember, deleteTeamMember, addTeamMember]);
+  };
 
   return (
     <ContentContext.Provider value={value}>
