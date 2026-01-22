@@ -22,7 +22,7 @@ export const ContentProvider = ({ children }) => {
       welcomeMessage: "Your Health, Our Priority - Caring for Kapsoya Families Since 2020"
     },
     about: {
-      title: "About Jedi Medical Centre",
+      title: "About JWe provide compassionate, affordable, and reliable medical care for individuals and families, with a commitment to quality treatment, dignity, and community well-being.edi Medical Centre",
       mainText: "Jedi Medical Centre is a fully operational Level 3 healthcare facility dedicated to providing quality medical services to Kapsoya community and greater Uasin Gishu region.",
       secondaryText: "Our commitment is to deliver accessible, reliable, and compassionate care that meets the diverse health needs of our community. We combine modern medical expertise with a deep understanding of local healthcare challenges.",
       galleryImages: []
@@ -148,26 +148,58 @@ export const ContentProvider = ({ children }) => {
 
   const loadContent = async () => {
     console.log('🔄 Loading content from Supabase...');
+    
+    // Performance tracking
+    const startTime = performance.now();
+    
+    // Check cache first
+    const CACHE_KEY = 'jedicare_content';
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    
+    const cached = localStorage.getItem(CACHE_KEY);
+    const cachedTime = localStorage.getItem(`${CACHE_KEY}_time`);
+    
+    if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < CACHE_DURATION) {
+      setContent(JSON.parse(cached));
+      console.log('📦 Loaded from cache');
+      return;
+    }
 
-    const { data, error } = await supabase
-      .from('content')
-      .select('data')
-      .eq('id', 1)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('content')
+        .select('data')
+        .eq('id', 1)
+        .single()
+        .throwOnError();
 
-    if (error) {
+      if (error) {
+        throw error;
+      }
+
+      if (data?.data) {
+        setContent(data.data);
+        console.log('✅ Loaded from Supabase');
+        
+        // Cache the result
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data.data));
+        localStorage.setItem(`${CACHE_KEY}_time`, Date.now().toString());
+        console.log('💾 Content cached for 5 minutes');
+        
+        // Performance logging
+        const loadTime = performance.now() - startTime;
+        console.log(`⚡ Content loaded in ${loadTime.toFixed(2)}ms`);
+        
+        if (loadTime > 1000) {
+          console.warn('🐌 Slow content load detected');
+        }
+        
+        return;
+      }
+    } catch (error) {
       console.warn('⚠️ Supabase failed, using default content', error.message);
       console.log('📝 Using default content');
-      return;
     }
-
-    if (data?.data) {
-      setContent(data.data);
-      console.log('✅ Loaded from Supabase');
-      return;
-    }
-
-    console.log('📝 Using default content');
   };
 
   const saveContent = async (dataToSave) => {
