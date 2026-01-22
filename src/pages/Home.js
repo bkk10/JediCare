@@ -316,7 +316,7 @@ const Home = () => {
             Compassion • Community • Quality Care
           </p>
           <p className="text-gray-500 text-xs mt-2">
-            © 2024 Jedi Medical Centre
+            © 2026 Jedi Medical Centre
           </p>
         </div>
       </footer>
