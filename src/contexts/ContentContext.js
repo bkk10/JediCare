@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 const ContentContext = createContext();
@@ -156,11 +156,7 @@ export const ContentProvider = ({ children }) => {
     };
   });
 
-  useEffect(() => {
-    loadContent();
-  }, []);
-
-  const loadContent = async () => {
+  const loadContent = useCallback(async () => {
     console.log('🔄 Loading content...');
     
     // Check cache first with longer duration for better performance
@@ -213,7 +209,11 @@ export const ContentProvider = ({ children }) => {
     
     // Always have content ready immediately
     console.log('📝 Using default content');
-  };
+  }, []);
+
+  useEffect(() => {
+    loadContent();
+  }, [loadContent]);
 
   const refreshContentInBackground = async () => {
     try {
@@ -226,33 +226,96 @@ export const ContentProvider = ({ children }) => {
 
       if (!error && data?.data) {
         const CACHE_KEY = 'jedicare_content';
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data.data));
+        
+        // Create cache-safe version
+        const cacheSafeData = JSON.parse(JSON.stringify(data.data));
+        
+        // Remove large image data from cache
+        if (cacheSafeData.hero?.backgroundImage && cacheSafeData.hero.backgroundImage.length > 100000) {
+          cacheSafeData.hero.backgroundImage = "";
+        }
+        
+        if (cacheSafeData.about?.galleryImages) {
+          cacheSafeData.about.galleryImages = cacheSafeData.about.galleryImages.map(img => 
+            img.length > 100000 ? "" : img
+          );
+        }
+        
+        if (cacheSafeData.team) {
+          cacheSafeData.team = cacheSafeData.team.map(member => ({
+            ...member,
+            image: member.image && member.image.length > 100000 ? "" : member.image
+          }));
+        }
+        
+        if (cacheSafeData.services) {
+          cacheSafeData.services = cacheSafeData.services.map(service => ({
+            ...service,
+            image: service.image && service.image.length > 100000 ? "" : service.image
+          }));
+        }
+        
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cacheSafeData));
         localStorage.setItem(`${CACHE_KEY}_time`, Date.now().toString());
+        
+        // Update state with full data (including images)
+        setContent(data.data);
         console.log('🔄 Background refresh completed');
       }
     } catch (error) {
-      console.log('� Background refresh failed, will retry later');
+      console.log('🔄 Background refresh failed, will retry later');
     }
   };
 
   const saveContent = async (dataToSave) => {
     console.log('💾 Saving to Supabase...');
     
-    // Optimistic update - cache immediately
+    // Create cache-safe version without large images
     const CACHE_KEY = 'jedicare_content';
-    localStorage.setItem(CACHE_KEY, JSON.stringify(dataToSave));
+    const cacheSafeData = JSON.parse(JSON.stringify(dataToSave));
+    
+    // Remove large image data from cache to prevent quota exceeded
+    if (cacheSafeData.hero?.backgroundImage && cacheSafeData.hero.backgroundImage.length > 100000) {
+      cacheSafeData.hero.backgroundImage = "";
+    }
+    
+    // Remove large images from gallery
+    if (cacheSafeData.about?.galleryImages) {
+      cacheSafeData.about.galleryImages = cacheSafeData.about.galleryImages.map(img => 
+        img.length > 100000 ? "" : img
+      );
+    }
+    
+    // Remove large team images
+    if (cacheSafeData.team) {
+      cacheSafeData.team = cacheSafeData.team.map(member => ({
+        ...member,
+        image: member.image && member.image.length > 100000 ? "" : member.image
+      }));
+    }
+    
+    // Remove large service images
+    if (cacheSafeData.services) {
+      cacheSafeData.services = cacheSafeData.services.map(service => ({
+        ...service,
+        image: service.image && service.image.length > 100000 ? "" : service.image
+      }));
+    }
+    
+    // Cache the optimized version
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheSafeData));
     localStorage.setItem(`${CACHE_KEY}_time`, Date.now().toString());
 
     try {
-      // Fast save with timeout
+      // Save full data to Supabase (including images) with much longer timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
       const { error } = await supabase
         .from('content')
         .upsert({
           id: 1,
-          data: dataToSave,
+          data: dataToSave, // Full data with images
           updated_at: new Date()
         })
         .abortSignal(controller.signal);
@@ -266,7 +329,13 @@ export const ContentProvider = ({ children }) => {
         throw error;
       }
     } catch (error) {
-      console.error('❌ Supabase save failed, but cached locally:', error.message);
+      if (error.name === 'AbortError') {
+        console.warn('⏰ Supabase save timed out after 30 seconds, but cached locally');
+      } else if (error.message?.includes('413') || error.message?.includes('too large')) {
+        console.warn('📦 File too large for Supabase, but cached locally');
+      } else {
+        console.error('❌ Supabase save failed, but cached locally:', error.message);
+      }
       // Still return true since content is cached locally
       return true;
     }
@@ -320,7 +389,45 @@ export const ContentProvider = ({ children }) => {
       if (file) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          resolve(reader.result);
+          const result = reader.result;
+          
+          // Compress large images before returning
+          if (result.length > 500000) { // If larger than 500KB
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              
+              // Calculate new dimensions (max 800px width/height)
+              let { width, height } = img;
+              const maxSize = 800;
+              
+              if (width > height) {
+                if (width > maxSize) {
+                  height *= maxSize / width;
+                  width = maxSize;
+                }
+              } else {
+                if (height > maxSize) {
+                  width *= maxSize / height;
+                  height = maxSize;
+                }
+              }
+              
+              canvas.width = width;
+              canvas.height = height;
+              
+              // Draw and compress
+              ctx.drawImage(img, 0, 0, width, height);
+              const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+              
+              console.log(`🗜️ Image compressed from ${Math.round(result.length / 1024)}KB to ${Math.round(compressedDataUrl.length / 1024)}KB`);
+              resolve(compressedDataUrl);
+            };
+            img.src = result;
+          } else {
+            resolve(result);
+          }
         };
         reader.onerror = reject;
         reader.readAsDataURL(file);
