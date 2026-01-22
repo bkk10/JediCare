@@ -161,15 +161,23 @@ export const ContentProvider = ({ children }) => {
 
     if (data?.data) {
       setContent(data.data);
-      localStorage.setItem('jedi-content', JSON.stringify(data.data));
+      try {
+        localStorage.setItem('jedi-content', JSON.stringify(data.data));
+      } catch (e) {
+        console.warn('localStorage quota exceeded, but Supabase load succeeded:', e);
+      }
       console.log('✅ Loaded from Supabase');
       return;
     }
 
     const saved = localStorage.getItem('jedi-content');
     if (saved) {
-      setContent(JSON.parse(saved));
-      console.log('📦 Loaded from localStorage');
+      try {
+        setContent(JSON.parse(saved));
+        console.log('📦 Loaded from localStorage');
+      } catch (e) {
+        console.warn('Failed to parse localStorage, using defaults:', e);
+      }
       return;
     }
 
@@ -189,16 +197,46 @@ export const ContentProvider = ({ children }) => {
         });
 
       if (!error) {
-        localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
+        // Only save to localStorage if Supabase succeeds
+        try {
+          localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
+        } catch (e) {
+          console.warn('localStorage quota exceeded, but Supabase save succeeded:', e);
+        }
         console.log('✅ Saved to Supabase');
         return true;
       } else {
         throw error;
       }
     } catch (error) {
-      console.warn('⚠️ Supabase save failed, using localStorage only', error.message);
-      localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
-      return false;
+      console.warn('⚠️ Supabase save failed, attempting localStorage', error.message);
+      
+      // Try to save to localStorage with error handling
+      try {
+        localStorage.setItem('jedi-content', JSON.stringify(dataToSave));
+        console.log('✅ Saved to localStorage as fallback');
+        return true;
+      } catch (quotaError) {
+        if (quotaError.name === 'QuotaExceededError') {
+          console.warn('⚠️ localStorage quota exceeded. Clearing old data...');
+          // Clear only old data, keep essential structure
+          const currentContent = JSON.parse(localStorage.getItem('jedi-content') || '{}');
+          const minimalContent = {
+            hero: currentContent.hero || {},
+            about: currentContent.about || {},
+            contact: currentContent.contact || {},
+            services: currentContent.services || [],
+            testimonials: currentContent.testimonials || [],
+            team: currentContent.team || []
+          };
+          localStorage.setItem('jedi-content', JSON.stringify(minimalContent));
+          console.log('✅ Cleared old data, saved minimal content');
+          return true;
+        } else {
+          console.error('❌ Unexpected localStorage error:', quotaError);
+          return false;
+        }
+      }
     }
   };
 

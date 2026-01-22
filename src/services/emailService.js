@@ -14,7 +14,7 @@ export const sendAppointmentEmail = async (appointmentData) => {
     formData.append('clinic', 'JediCare Medical Centre');
     formData.append('submission_date', new Date().toLocaleString());
     
-    const response = await fetch('https://formsubmit.co/ajax/brkkiprip@gmail.com', {
+    const response = await fetch('https://formsubmit.co/ajax/info@jedicare.co.ke', {
       method: 'POST',
       body: formData
     });
@@ -24,7 +24,7 @@ export const sendAppointmentEmail = async (appointmentData) => {
     if (result.success) {
       return { 
         success: true, 
-        message: 'Appointment details sent to brkkiprip@gmail.com successfully!' 
+        message: 'Appointment details sent to info@jedicare.co.ke successfully!' 
       };
     } else {
       throw new Error('FormSubmit failed');
@@ -35,7 +35,7 @@ export const sendAppointmentEmail = async (appointmentData) => {
     
     // Method 2: Fallback - log to console (always works)
     console.log('=== NEW APPOINTMENT FOR JEDICARE ===');
-    console.log('Send to: brkkiprip@gmail.com');
+    console.log('Send to: brkkiprop@gmail.com');
     console.log('Patient:', appointmentData.name);
     console.log('Email:', appointmentData.email);
     console.log('Phone:', appointmentData.phone);
@@ -55,9 +55,55 @@ export const sendAppointmentEmail = async (appointmentData) => {
 
 // Simple confirmation (optional)
 export const sendConfirmationEmail = async (appointmentData) => {
-  // Skip confirmation for now to keep it simple
-  return { 
-    success: true, 
-    message: 'Main appointment received' 
-  };
+  try {
+    // Send confirmation to patient's email
+    const formData = new FormData();
+    
+    formData.append('name', appointmentData.name);
+    formData.append('email', appointmentData.email);
+    formData.append('subject', 'Appointment Confirmation - JediCare Medical Centre');
+    formData.append('message', `
+      Dear ${appointmentData.name},
+
+      Your appointment has been successfully booked at JediCare Medical Centre!
+
+      Appointment Details:
+      - Date: ${appointmentData.date}
+      - Time: ${appointmentData.time}
+      - Reason: ${appointmentData.reason}
+      - Phone: ${appointmentData.phone}
+
+      Please arrive 10 minutes before your scheduled time.
+      If you need to reschedule, please call us at +254 XXX XXX XXX.
+
+      We look forward to seeing you!
+
+      Best regards,
+      JediCare Medical Centre Team
+      Kapsoya Ward, Ainabkoi Constituency, Uasin Gishu County
+    `);
+    
+    const response = await fetch('https://formsubmit.co/ajax/' + appointmentData.email, {
+      method: 'POST',
+      body: formData
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      return { 
+        success: true, 
+        message: 'Confirmation email sent to patient!' 
+      };
+    } else {
+      throw new Error('Confirmation email failed');
+    }
+    
+  } catch (error) {
+    console.error('Confirmation email error:', error);
+    return { 
+      success: false, 
+      message: 'Confirmation email failed, but appointment was received' 
+    };
+  }
 };

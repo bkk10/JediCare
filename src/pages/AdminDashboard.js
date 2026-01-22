@@ -32,6 +32,10 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleSaveHero = async () => {
+    await updateContent('hero', content.hero);
+  };
+
   const handleAddTestimonial = () => {
     const newTestimonial = {
       name: '',
@@ -71,11 +75,6 @@ const AdminDashboard = () => {
 
   const handleLogout = () => {
     logout();
-  };
-
-  const handleSaveHero = () => {
-    updateContent('hero', content.hero);
-    alert('Hero section updated successfully!');
   };
 
   const handleSaveAbout = () => {
@@ -234,7 +233,31 @@ const AdminDashboard = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     />
                   </div>
-                  {/* Hero images are now static - removed from admin panel */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Background Image</label>
+                    <ImageUpload
+                      currentImage={content.hero.backgroundImage}
+                      onImageChange={(imageUrl) => updateContent('hero', { ...content.hero, backgroundImage: imageUrl })}
+                      label="Background Image"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
+                    <ImageUpload
+                      currentImage={content.hero.logo}
+                      onImageChange={(imageUrl) => updateContent('hero', { ...content.hero, logo: imageUrl })}
+                      label="Logo"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Welcome Message</label>
+                    <textarea
+                      value={content.hero.welcomeMessage}
+                      onChange={(e) => updateContent('hero', { ...content.hero, welcomeMessage: e.target.value })}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
                   <button
                     onClick={handleSaveHero}
                     className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
