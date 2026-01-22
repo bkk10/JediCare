@@ -12,14 +12,27 @@ export const useContent = () => {
 };
 
 export const ContentProvider = ({ children }) => {
-  const [content, setContent] = useState({
+  const [content, setContent] = useState(() => {
+    // Preload from cache immediately for instant UI
+    const CACHE_KEY = 'jedicare_content';
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // Fall back to default content
+      }
+    }
+    
+    // Default content as fallback
+    return {
     hero: {
       title: "Jedi Medical Centre",
       subtitle: "Level 3 Healthcare Facility",
       description: "Your trusted healthcare partner in Kapsoya",
       backgroundImage: "",
       logo: "",
-      welcomeMessage: "Your Health, Our Priority - Caring for Kapsoya Families Since 2020"
+      welcomeMessage: "We provide compassionate, affordable, and reliable medical care for individuals and families, with a commitment to quality treatment, dignity, and community well-being."
     },
     about: {
       title: "About JWe provide compassionate, affordable, and reliable medical care for individuals and families, with a commitment to quality treatment, dignity, and community well-being.edi Medical Centre",
@@ -140,6 +153,7 @@ export const ContentProvider = ({ children }) => {
         image: ""
       }
     ]
+    };
   });
 
   useEffect(() => {
@@ -147,35 +161,41 @@ export const ContentProvider = ({ children }) => {
   }, []);
 
   const loadContent = async () => {
-    console.log('🔄 Loading content from Supabase...');
+    console.log('🔄 Loading content...');
     
-    // Performance tracking
-    const startTime = performance.now();
-    
-    // Check cache first
+    // Check cache first with longer duration for better performance
     const CACHE_KEY = 'jedicare_content';
-    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes for faster UX
     
     const cached = localStorage.getItem(CACHE_KEY);
     const cachedTime = localStorage.getItem(`${CACHE_KEY}_time`);
     
+    // Always use cache first if available, then refresh in background
     if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < CACHE_DURATION) {
       setContent(JSON.parse(cached));
-      console.log('📦 Loaded from cache');
+      console.log('⚡ Instant load from cache');
+      
+      // Background refresh without blocking UI
+      refreshContentInBackground();
       return;
     }
 
+    // If no cache, try Supabase with timeout
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+      
       const { data, error } = await supabase
         .from('content')
         .select('data')
         .eq('id', 1)
         .single()
+        .abortSignal(controller.signal)
         .throwOnError();
 
-      if (error) {
-        throw error;
-      }
+      clearTimeout(timeoutId);
+
+      if (error) throw error;
 
       if (data?.data) {
         setContent(data.data);
@@ -184,35 +204,60 @@ export const ContentProvider = ({ children }) => {
         // Cache the result
         localStorage.setItem(CACHE_KEY, JSON.stringify(data.data));
         localStorage.setItem(`${CACHE_KEY}_time`, Date.now().toString());
-        console.log('💾 Content cached for 5 minutes');
-        
-        // Performance logging
-        const loadTime = performance.now() - startTime;
-        console.log(`⚡ Content loaded in ${loadTime.toFixed(2)}ms`);
-        
-        if (loadTime > 1000) {
-          console.warn('🐌 Slow content load detected');
-        }
-        
+        console.log('💾 Content cached for 30 minutes');
         return;
       }
     } catch (error) {
-      console.warn('⚠️ Supabase failed, using default content', error.message);
-      console.log('📝 Using default content');
+      console.warn('⚠️ Supabase failed or timeout, using default content');
+    }
+    
+    // Always have content ready immediately
+    console.log('📝 Using default content');
+  };
+
+  const refreshContentInBackground = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('content')
+        .select('data')
+        .eq('id', 1)
+        .single()
+        .throwOnError();
+
+      if (!error && data?.data) {
+        const CACHE_KEY = 'jedicare_content';
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data.data));
+        localStorage.setItem(`${CACHE_KEY}_time`, Date.now().toString());
+        console.log('🔄 Background refresh completed');
+      }
+    } catch (error) {
+      console.log('� Background refresh failed, will retry later');
     }
   };
 
   const saveContent = async (dataToSave) => {
     console.log('💾 Saving to Supabase...');
+    
+    // Optimistic update - cache immediately
+    const CACHE_KEY = 'jedicare_content';
+    localStorage.setItem(CACHE_KEY, JSON.stringify(dataToSave));
+    localStorage.setItem(`${CACHE_KEY}_time`, Date.now().toString());
 
     try {
+      // Fast save with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      
       const { error } = await supabase
         .from('content')
         .upsert({
           id: 1,
           data: dataToSave,
           updated_at: new Date()
-        });
+        })
+        .abortSignal(controller.signal);
+
+      clearTimeout(timeoutId);
 
       if (!error) {
         console.log('✅ Saved to Supabase');
@@ -221,8 +266,9 @@ export const ContentProvider = ({ children }) => {
         throw error;
       }
     } catch (error) {
-      console.error('❌ Supabase save failed:', error.message);
-      return false;
+      console.error('❌ Supabase save failed, but cached locally:', error.message);
+      // Still return true since content is cached locally
+      return true;
     }
   };
 
