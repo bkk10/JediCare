@@ -231,27 +231,27 @@ export const ContentProvider = ({ children }) => {
         const cacheSafeData = JSON.parse(JSON.stringify(data.data));
         
         // Remove large image data from cache
-        if (cacheSafeData.hero?.backgroundImage && cacheSafeData.hero.backgroundImage.length > 100000) {
+        if (cacheSafeData.hero?.backgroundImage && cacheSafeData.hero.backgroundImage.length > 50000) {
           cacheSafeData.hero.backgroundImage = "";
         }
         
         if (cacheSafeData.about?.galleryImages) {
           cacheSafeData.about.galleryImages = cacheSafeData.about.galleryImages.map(img => 
-            img.length > 100000 ? "" : img
+            img.length > 50000 ? "" : img
           );
         }
         
         if (cacheSafeData.team) {
           cacheSafeData.team = cacheSafeData.team.map(member => ({
             ...member,
-            image: member.image && member.image.length > 100000 ? "" : member.image
+            image: member.image && member.image.length > 50000 ? "" : member.image
           }));
         }
         
         if (cacheSafeData.services) {
           cacheSafeData.services = cacheSafeData.services.map(service => ({
             ...service,
-            image: service.image && service.image.length > 100000 ? "" : service.image
+            image: service.image && service.image.length > 50000 ? "" : service.image
           }));
         }
         
@@ -275,14 +275,14 @@ export const ContentProvider = ({ children }) => {
     const cacheSafeData = JSON.parse(JSON.stringify(dataToSave));
     
     // Remove large image data from cache to prevent quota exceeded
-    if (cacheSafeData.hero?.backgroundImage && cacheSafeData.hero.backgroundImage.length > 100000) {
+    if (cacheSafeData.hero?.backgroundImage && cacheSafeData.hero.backgroundImage.length > 50000) {
       cacheSafeData.hero.backgroundImage = "";
     }
     
     // Remove large images from gallery
     if (cacheSafeData.about?.galleryImages) {
       cacheSafeData.about.galleryImages = cacheSafeData.about.galleryImages.map(img => 
-        img.length > 100000 ? "" : img
+        img.length > 50000 ? "" : img
       );
     }
     
@@ -290,7 +290,7 @@ export const ContentProvider = ({ children }) => {
     if (cacheSafeData.team) {
       cacheSafeData.team = cacheSafeData.team.map(member => ({
         ...member,
-        image: member.image && member.image.length > 100000 ? "" : member.image
+        image: member.image && member.image.length > 50000 ? "" : member.image
       }));
     }
     
@@ -298,7 +298,7 @@ export const ContentProvider = ({ children }) => {
     if (cacheSafeData.services) {
       cacheSafeData.services = cacheSafeData.services.map(service => ({
         ...service,
-        image: service.image && service.image.length > 100000 ? "" : service.image
+        image: service.image && service.image.length > 50000 ? "" : service.image
       }));
     }
     
@@ -391,43 +391,56 @@ export const ContentProvider = ({ children }) => {
         reader.onloadend = () => {
           const result = reader.result;
           
-          // Compress large images before returning
-          if (result.length > 500000) { // If larger than 500KB
-            const img = new Image();
-            img.onload = () => {
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              
-              // Calculate new dimensions (max 800px width/height)
-              let { width, height } = img;
-              const maxSize = 800;
-              
-              if (width > height) {
-                if (width > maxSize) {
-                  height *= maxSize / width;
-                  width = maxSize;
-                }
-              } else {
-                if (height > maxSize) {
-                  width *= maxSize / height;
-                  height = maxSize;
-                }
+          // More aggressive compression for all images
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Calculate new dimensions (max 600px width/height for smaller files)
+            let { width, height } = img;
+            const maxSize = 600;
+            
+            if (width > height) {
+              if (width > maxSize) {
+                height *= maxSize / width;
+                width = maxSize;
               }
-              
-              canvas.width = width;
-              canvas.height = height;
-              
-              // Draw and compress
-              ctx.drawImage(img, 0, 0, width, height);
-              const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-              
-              console.log(`🗜️ Image compressed from ${Math.round(result.length / 1024)}KB to ${Math.round(compressedDataUrl.length / 1024)}KB`);
+            } else {
+              if (height > maxSize) {
+                width *= maxSize / height;
+                height = maxSize;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Draw and compress more aggressively
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Try different quality levels based on original size
+            let quality = 0.5; // Default 50%
+            if (result.length > 1000000) { // If larger than 1MB
+              quality = 0.3; // 30% quality
+            } else if (result.length > 500000) { // If larger than 500KB
+              quality = 0.4; // 40% quality
+            }
+            
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            
+            console.log(`🗜️ Image compressed from ${Math.round(result.length / 1024)}KB to ${Math.round(compressedDataUrl.length / 1024)}KB (${Math.round(quality * 100)}% quality)`);
+            
+            // If still too large, try even more aggressive compression
+            if (compressedDataUrl.length > 300000) { // If still larger than 300KB
+              const veryCompressed = canvas.toDataURL('image/jpeg', 0.2);
+              console.log(`🗜️ Further compression to ${Math.round(veryCompressed.length / 1024)}KB (20% quality)`);
+              resolve(veryCompressed);
+            } else {
               resolve(compressedDataUrl);
-            };
-            img.src = result;
-          } else {
-            resolve(result);
-          }
+            }
+          };
+          img.src = result;
         };
         reader.onerror = reject;
         reader.readAsDataURL(file);
