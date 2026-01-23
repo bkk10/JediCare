@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="32" height="32"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Create gradient background
+        const gradient = ctx.createLinearGradient(0, 0, 32, 32);
+        gradient.addColorStop(0, '#2563eb');
+        gradient.addColorStop(1, '#1e40af');
+        
+        // Draw circle
+        ctx.beginPath();
+        ctx.arc(16, 16, 15, 0, 2 * Math.PI);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+        // Draw medical cross
+        ctx.fillStyle = 'white';
+        // Vertical bar
+        ctx.fillRect(13, 7, 6, 18);
+        // Horizontal bar
+        ctx.fillRect(7, 13, 18, 6);
+        
+        // Convert to blob and download
+        canvas.toBlob(function(blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'favicon.png';
+            a.click();
+        });
+    </script>
+</body>
+</html>
