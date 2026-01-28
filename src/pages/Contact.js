@@ -12,7 +12,7 @@ const Contact = () => {
             Contact Us
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Get in touch with Jedi Medical Centre
+            Get in touch with jedicare Medical Centre
           </p>
           <div className="w-24 h-1 bg-primary-600 mx-auto mt-4"></div>
         </div>

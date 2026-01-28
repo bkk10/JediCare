@@ -13,9 +13,11 @@ import {
   Edit,
   Star,
   Users,
-  User
+  User,
+  Image
 } from 'lucide-react';
 import ImageUpload from '../components/ImageUpload';
+import AdminGallery from '../components/AdminGallery';
 
 const AdminDashboard = () => {
   const { logout } = useAuth();
@@ -33,7 +35,13 @@ const AdminDashboard = () => {
   };
 
   const handleSaveHero = async () => {
-    await updateContent('hero', content.hero);
+    try {
+      await updateContent('hero', content.hero);
+      alert('Hero section updated successfully!');
+    } catch (error) {
+      console.error('Error saving hero section:', error);
+      alert('Error saving hero section. Please try again.');
+    }
   };
 
   const handleAddTestimonial = () => {
@@ -138,6 +146,17 @@ const AdminDashboard = () => {
               >
                 <FileText className="h-5 w-5" />
                 <span>About Section</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('gallery')}
+                className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'gallery' 
+                    ? 'bg-primary-100 text-primary-700' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Image className="h-5 w-5" />
+                <span>Gallery</span>
               </button>
               <button
                 onClick={() => setActiveTab('services')}
@@ -267,6 +286,11 @@ const AdminDashboard = () => {
                   </button>
                 </div>
               </div>
+            )}
+
+            {/* Gallery Section */}
+            {activeTab === 'gallery' && (
+              <AdminGallery />
             )}
 
             {/* About Section */}

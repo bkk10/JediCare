@@ -37,7 +37,7 @@ Use services like:
 ## 📁 File Structure
 
 ```
-jedicare/
+JediCare/
 ├── src/
 │   └── contexts/
 │       └── ContentContext.js (✅ Already created)

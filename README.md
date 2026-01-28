@@ -1,6 +1,6 @@
 # JediCare Medical Centre Website
 
-A modern, responsive healthcare website for Jedi Medical Centre with an integrated admin panel for content management.
+A modern, responsive healthcare website for jedicare Medical Centre with an integrated admin panel for content management.
 
 ## Features
 
@@ -50,7 +50,7 @@ A modern, responsive healthcare website for Jedi Medical Centre with an integrat
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd jedicare
+cd JediCare
 ```
 
 2. Install dependencies:
@@ -71,14 +71,14 @@ To access the admin panel:
 1. Navigate to `/admin` or click the "Admin" button in the navigation
 2. Use the following default credentials:
    - **Username**: `admin`
-   - **Password**: `jedicare123`
+   - **Password**: `JediCare123`
 
 **Important**: Change these credentials in production for security.
 
 ## Project Structure
 
 ```
-jedicare/
+JediCare/
 ├── public/
 │   └── index.html
 ├── src/
@@ -159,4 +159,4 @@ For support or questions regarding the JediCare website, please contact the deve
 
 ## License
 
-This project is proprietary to Jedi Medical Centre.
+This project is proprietary to jedicare Medical Centre.

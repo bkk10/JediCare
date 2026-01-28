@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jedicare-v1';
+const CACHE_NAME = 'JediCare-v1';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',

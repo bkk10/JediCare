@@ -77,7 +77,7 @@ export const sendAppointmentEmail = async (appointmentData) => {
             patient_message: appointmentData.message
           }
         }],
-        from: { email: 'noreply@jedicare.co.ke', name: 'JediCare Medical Centre' },
+        from: { email: 'noreply@JediCare.co.ke', name: 'JediCare Medical Centre' },
         content: [{
           type: 'text/html',
           value: 'Appointment confirmation template'
@@ -149,7 +149,7 @@ export const sendAppointmentEmail = async (appointmentData) => {
         'Authorization': 'Bearer YOUR_RESEND_API_KEY'
       },
       body: JSON.stringify({
-        from: 'JediCare <noreply@jedicare.co.ke>',
+        from: 'JediCare <noreply@JediCare.co.ke>',
         to: ['brkkiprop@gmail.com'],
         subject: 'New Appointment - JediCare Medical Centre',
         html: `

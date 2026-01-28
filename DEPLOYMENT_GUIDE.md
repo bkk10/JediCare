@@ -19,7 +19,7 @@
 
 #### Custom Domain (Optional):
 - Go to Site settings → Domain management
-- Add your custom domain (e.g., jedicare.co.ke)
+- Add your custom domain (e.g., JediCare.co.ke)
 - Update DNS records as instructed
 
 ---
@@ -59,7 +59,7 @@
    - Branch: gh-pages / (root)
    - Save
 
-3. **Your site is live at**: `https://username.github.io/jedicare`
+3. **Your site is live at**: `https://username.github.io/JediCare`
 
 ---
 

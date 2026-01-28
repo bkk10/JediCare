@@ -16,6 +16,7 @@ import {
 import TestimonialCard from '../components/TestimonialCard';
 import TeamCard from '../components/TeamCard';
 import AppointmentForm from '../components/AppointmentForm';
+import Gallery from '../components/Gallery';
 
 const Home = () => {
   const { content } = useContent();
@@ -267,6 +268,9 @@ const Home = () => {
         </div>
       </section>
 
+      {/* ================= GALLERY ================= */}
+      <Gallery />
+
       {/* ================= APPOINTMENT ================= */}
       <section id="appointment" className="py-20 bg-primary-50">
         <div className="max-w-3xl mx-auto px-6">
@@ -316,7 +320,7 @@ const Home = () => {
             Compassion • Community • Quality Care
           </p>
           <p className="text-gray-500 text-xs mt-2">
-            © 2026 Jedi Medical Centre
+            © 2026 jedicare Medical Centre
           </p>
         </div>
       </footer>

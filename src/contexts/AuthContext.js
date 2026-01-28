@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     setIsLoading(true);
     // Simple authentication - in production, this would be an API call
-    if (username === 'admin' && password === 'jedicare123') {
+    if (username === 'admin' && password === 'JediCare123') {
       setIsAuthenticated(true);
       setIsLoading(false);
       return { success: true };

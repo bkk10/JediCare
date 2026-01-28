@@ -14,7 +14,7 @@ This guide will help you set up EmailJS to receive appointment bookings directly
 2. Click **Add New Service**
 3. Choose your email provider (Gmail is recommended)
 4. Connect your Gmail account (brkkiprip@gmail.com)
-5. Give your service a name (e.g., "jedicare_gmail")
+5. Give your service a name (e.g., "JediCare_gmail")
 6. Click **Create Service**
 
 ## Step 3: Create Email Templates

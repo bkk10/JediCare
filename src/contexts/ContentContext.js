@@ -14,7 +14,7 @@ export const useContent = () => {
 export const ContentProvider = ({ children }) => {
   const [content, setContent] = useState(() => {
     // Preload from cache immediately for instant UI
-    const CACHE_KEY = 'jedicare_content';
+    const CACHE_KEY = 'JediCare_content';
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       try {
@@ -27,7 +27,7 @@ export const ContentProvider = ({ children }) => {
     // Default content as fallback
     return {
     hero: {
-      title: "Jedi Medical Centre",
+      title: "jedicare Medical Centre",
       subtitle: "Level 3 Healthcare Facility",
       description: "Your trusted healthcare partner in Kapsoya",
       backgroundImage: "",
@@ -35,72 +35,20 @@ export const ContentProvider = ({ children }) => {
       welcomeMessage: "We provide compassionate, affordable, and reliable medical care for individuals and families, with a commitment to quality treatment, dignity, and community well-being."
     },
     about: {
-      title: "About JWe provide compassionate, affordable, and reliable medical care for individuals and families, with a commitment to quality treatment, dignity, and community well-being.edi Medical Centre",
-      mainText: "Jedi Medical Centre is a fully operational Level 3 healthcare facility dedicated to providing quality medical services to Kapsoya community and greater Uasin Gishu region.",
+      title: "We provide compassionate, affordable, and reliable medical care for individuals and families, with a commitment to quality treatment, dignity, and community well-being.edi Medical Centre",
+      mainText: "jedicare Medical Centre is a fully operational Level 3 healthcare facility dedicated to providing quality medical services to Kapsoya community and greater Uasin Gishu region.",
       secondaryText: "Our commitment is to deliver accessible, reliable, and compassionate care that meets the diverse health needs of our community. We combine modern medical expertise with a deep understanding of local healthcare challenges.",
       galleryImages: []
     },
     testimonials: [
-      {
-        id: 1,
-        name: "Grace Wanjiru",
-        age: 45,
-        location: "Kapsoya",
-        story: "The care I received at Jedi Medical Centre was exceptional. The doctors took time to understand my condition and explained everything clearly. I felt like family.",
-        rating: 5,
-        treatment: "Diabetes Management"
-      },
-      {
-        id: 2,
-        name: "Samuel Kiprop",
-        age: 32,
-        location: "Ainabkoi",
-        story: "After my accident, emergency response was quick and professional. The follow-up care helped me recover completely. Thank you Jedi team!",
-        rating: 5,
-        treatment: "Emergency Care"
-      },
-      {
-        id: 3,
-        name: "Miriam Chebet",
-        age: 28,
-        location: "Kapsoya",
-        story: "The maternity services here are outstanding. The nurses were so supportive throughout my pregnancy and delivery. I felt safe and cared for.",
-        rating: 5,
-        treatment: "Maternity Care"
-      }
+      
     ],
     team: [
-      {
-        id: 1,
-        name: "Dr. Michael Kipruto",
-        title: "Medical Director",
-        specialty: "Internal Medicine",
-        experience: "15+ years",
-        image: "",
-        bio: "Dr. Kipruto is passionate about community health and has dedicated his career to serving the people of Uasin Gishu County."
-      },
-      {
-        id: 2,
-        name: "Dr. Sarah Cheptoo",
-        title: "Head of Pediatrics",
-        specialty: "Pediatrics & Child Health",
-        experience: "10+ years",
-        image: "",
-        bio: "Dr. Cheptoo loves working with children and believes every child deserves the best start in life."
-      },
-      {
-        id: 3,
-        name: "Dr. James Kiplagat",
-        title: "Senior Medical Officer",
-        specialty: "General Practice",
-        experience: "8+ years",
-        image: "",
-        bio: "Dr. Kiplagat is known for his compassionate approach and dedication to patient education."
-      }
+      
     ],
     contact: {
       phone: "+254 XXX XXX XXX",
-      email: "info@jedicare.co.ke",
+      email: "info@JediCare.co.ke",
       address: "Kapsoya Ward, Ainabkoi Constituency, Uasin Gishu County",
       hours: {
         weekdays: "Mon - Sat: 8:00 AM - 8:00 PM",
@@ -117,13 +65,7 @@ export const ContentProvider = ({ children }) => {
         description: "Assessment and treatment for everyday concerns with clear next steps.",
         image: ""
       },
-      {
-        id: 2,
-        title: "Medical Diagnostics",
-        subtitle: "Diagnostics",
-        description: "Laboratory tests and imaging to support accurate, timely diagnoses.",
-        image: ""
-      },
+      
       {
         id: 3,
         title: "Medical Treatment",
@@ -144,14 +86,8 @@ export const ContentProvider = ({ children }) => {
         subtitle: "Optician Services",
         description: "Comprehensive eye exams, prescriptions, and glasses sales with curated frames.",
         image: ""
-      },
-      {
-        id: 6,
-        title: "Community Healthcare",
-        subtitle: "Community-Focused Care",
-        description: "Accessible care for Kapsoya and greater Uasin Gishu—reliable and close to home.",
-        image: ""
       }
+      
     ]
     };
   });
@@ -160,7 +96,7 @@ export const ContentProvider = ({ children }) => {
     console.log('🔄 Loading content...');
     
     // Check cache first with longer duration for better performance
-    const CACHE_KEY = 'jedicare_content';
+    const CACHE_KEY = 'JediCare_content';
     const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes for faster UX
     
     const cached = localStorage.getItem(CACHE_KEY);
@@ -225,7 +161,7 @@ export const ContentProvider = ({ children }) => {
         .throwOnError();
 
       if (!error && data?.data) {
-        const CACHE_KEY = 'jedicare_content';
+        const CACHE_KEY = 'JediCare_content';
         
         // Create cache-safe version
         const cacheSafeData = JSON.parse(JSON.stringify(data.data));
@@ -270,20 +206,29 @@ export const ContentProvider = ({ children }) => {
   const saveContent = async (dataToSave) => {
     console.log('💾 Saving to Supabase...');
     
+    // Debug: Check data size
+    const dataSize = JSON.stringify(dataToSave).length;
+    console.log(`📊 Data size: ${Math.round(dataSize / 1024)} KB`);
+    
     // Create cache-safe version without large images
-    const CACHE_KEY = 'jedicare_content';
+    const CACHE_KEY = 'JediCare_content';
     const cacheSafeData = JSON.parse(JSON.stringify(dataToSave));
     
     // Remove large image data from cache to prevent quota exceeded
     if (cacheSafeData.hero?.backgroundImage && cacheSafeData.hero.backgroundImage.length > 50000) {
+      console.log('🗑️ Removing large background image from cache');
       cacheSafeData.hero.backgroundImage = "";
     }
     
     // Remove large images from gallery
     if (cacheSafeData.about?.galleryImages) {
-      cacheSafeData.about.galleryImages = cacheSafeData.about.galleryImages.map(img => 
-        img.length > 50000 ? "" : img
-      );
+      cacheSafeData.about.galleryImages = cacheSafeData.about.galleryImages.map(img => {
+        if (img.length > 50000) {
+          console.log('🗑️ Removing large gallery image from cache');
+          return "";
+        }
+        return img;
+      });
     }
     
     // Remove large team images
@@ -294,14 +239,6 @@ export const ContentProvider = ({ children }) => {
       }));
     }
     
-    // Remove large service images
-    if (cacheSafeData.services) {
-      cacheSafeData.services = cacheSafeData.services.map(service => ({
-        ...service,
-        image: service.image && service.image.length > 50000 ? "" : service.image
-      }));
-    }
-    
     // Cache the optimized version
     localStorage.setItem(CACHE_KEY, JSON.stringify(cacheSafeData));
     localStorage.setItem(`${CACHE_KEY}_time`, Date.now().toString());
@@ -309,7 +246,7 @@ export const ContentProvider = ({ children }) => {
     try {
       // Save full data to Supabase (including images) with much longer timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
       
       const { error } = await supabase
         .from('content')
@@ -330,7 +267,7 @@ export const ContentProvider = ({ children }) => {
       }
     } catch (error) {
       if (error.name === 'AbortError') {
-        console.warn('⏰ Supabase save timed out after 30 seconds, but cached locally');
+        console.warn('⏰ Supabase save timed out after 60 seconds, but cached locally');
       } else if (error.message?.includes('413') || error.message?.includes('too large')) {
         console.warn('📦 File too large for Supabase, but cached locally');
       } else {

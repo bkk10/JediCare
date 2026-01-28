@@ -28,7 +28,7 @@ CREATE INDEX IF NOT EXISTS idx_content_id ON content(id);
 -- Insert initial content with fixed ID
 INSERT INTO content (id, data) VALUES (1, '{
   "hero": {
-    "title": "Jedi Medical Centre",
+    "title": "jedicare Medical Centre",
     "subtitle": "Level 3 Healthcare Facility",
     "description": "Your trusted healthcare partner in Kapsoya",
     "backgroundImage": "",
@@ -36,8 +36,8 @@ INSERT INTO content (id, data) VALUES (1, '{
     "welcomeMessage": "Your Health, Our Priority - Caring for Kapsoya Families Since 2020"
   },
   "about": {
-    "title": "About Jedi Medical Centre",
-    "mainText": "Jedi Medical Centre is a fully operational Level 3 healthcare facility dedicated to providing quality medical services to the Kapsoya community and greater Uasin Gishu region.",
+    "title": "About jedicare Medical Centre",
+    "mainText": "jedicare Medical Centre is a fully operational Level 3 healthcare facility dedicated to providing quality medical services to the Kapsoya community and greater Uasin Gishu region.",
     "secondaryText": "Our commitment is to deliver accessible, reliable, and compassionate care that meets the diverse health needs of our community.",
     "galleryImages": []
   },
@@ -45,7 +45,7 @@ INSERT INTO content (id, data) VALUES (1, '{
   "team": [],
   "contact": {
     "phone": "+254 XXX XXX XXX",
-    "email": "info@jedicare.co.ke",
+    "email": "info@JediCare.co.ke",
     "address": "Kapsoya Ward, Ainabkoi Constituency, Uasin Gishu County",
     "hours": {
       "weekdays": "Mon - Sat: 8:00 AM - 8:00 PM",
@@ -149,7 +149,7 @@ const { data, error } = await supabase
 ### 2. Caching Strategy
 ```javascript
 // Add to ContentContext.js
-const CACHE_KEY = 'jedicare_content';
+const CACHE_KEY = 'JediCare_content';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 const loadContent = async () => {

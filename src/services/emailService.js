@@ -50,7 +50,7 @@ export const sendAppointmentEmail = async (appointmentData) => {
     console.error('EmailJS error:', error);
     
     // Fallback to console logging
-    console.log('=== NEW APPOINTMENT FOR JEDICARE ===');
+    console.log('=== NEW APPOINTMENT FOR JediCare ===');
     console.log('Send to: brkkiprop@gmail.com');
     console.log('Patient:', appointmentData.name);
     console.log('Email:', appointmentData.email);
@@ -104,7 +104,7 @@ export const sendConfirmationEmail = async (appointmentData) => {
         to_name: appointmentData.name,
         to_email: appointmentData.email,  // This should send to patient's email
         from_name: "JediCare Medical Centre",
-        from_email: "info@jedicare.co.ke",
+        from_email: "info@JediCare.co.ke",
         patient_name: appointmentData.name,
         patient_email: appointmentData.email,
         appointment_date: appointmentData.date,
@@ -115,7 +115,7 @@ export const sendConfirmationEmail = async (appointmentData) => {
         clinic_phone: "+254 XXX XXX XXX",
         clinic_address: "Kapsoya Ward, Ainabkoi Constituency, Uasin Gishu County",
         submission_date: new Date().toLocaleString(),
-        reply_to: "info@jedicare.co.ke",  // Patient can reply to clinic
+        reply_to: "info@JediCare.co.ke",  // Patient can reply to clinic
         html_message: confirmationContent  // Send HTML content directly
       }
     );

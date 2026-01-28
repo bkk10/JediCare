@@ -6,7 +6,7 @@ The appointment booking system is already configured to send emails using **Form
 
 ### How it works:
 
-1. **Primary Email**: `info@jedicare.co.ke` - Receives appointment notifications
+1. **Primary Email**: `info@JediCare.co.ke` - Receives appointment notifications
 2. **Patient Confirmation**: Automatic confirmation sent to patient's email
 3. **Fallback**: Console logging if email service fails
 
@@ -14,7 +14,7 @@ The appointment booking system is already configured to send emails using **Form
 
 #### Option 1: Use FormSubmit.co (Recommended - Free & Easy)
 1. Go to [FormSubmit.co](https://formsubmit.co/)
-2. Enter your email: `info@jedicare.co.ke`
+2. Enter your email: `info@JediCare.co.ke`
 3. Click "Create Form"
 4. You'll get a form endpoint - replace the current one in `emailService.js`
 
@@ -34,7 +34,7 @@ The appointment booking system is already configured to send emails using **Form
 3. Fill out the form with real details
 4. Submit the form
 5. Check:
-   - Your clinic email (`info@jedicare.co.ke`)
+   - Your clinic email (`info@JediCare.co.ke`)
    - Patient's confirmation email
    - Browser console for fallback messages
 
@@ -70,7 +70,7 @@ The appointment booking system is already configured to send emails using **Form
 ### Next Steps:
 
 1. Test the current system
-2. Set up FormSubmit.co for `info@jedicare.co.ke`
+2. Set up FormSubmit.co for `info@JediCare.co.ke`
 3. Verify both clinic and patient emails work
 4. Monitor for any issues
 
